@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/Navbar";
-import { VideoUploadForm } from "@/components/VideoUploadForm";
+import VideoUploadForm from "@/components/VideoUploadForm";
 
 const Index = () => {
   return (
@@ -17,44 +17,13 @@ const Index = () => {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Terjemahkan video Anda ke berbagai bahasa dengan teknologi AI terdepan
+              Terjemahkan video Anda ke berbagai bahasa dengan teknologi 
             </p>
           </div>
 
           {/* Upload Form */}
           <div className="animate-slide-up">
             <VideoUploadForm />
-          </div>
-
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 animate-fade-in">
-            <div className="text-center p-6 rounded-lg bg-gradient-card border border-border/50">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <h3 className="font-semibold mb-2">Akurat</h3>
-              <p className="text-sm text-muted-foreground">
-                Terjemahan berkualitas tinggi dengan AI terbaru
-              </p>
-            </div>
-            <div className="text-center p-6 rounded-lg bg-gradient-card border border-border/50">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center">
-                <span className="text-2xl">⚡</span>
-              </div>
-              <h3 className="font-semibold mb-2">Cepat</h3>
-              <p className="text-sm text-muted-foreground">
-                Proses terjemahan dalam hitungan menit
-              </p>
-            </div>
-            <div className="text-center p-6 rounded-lg bg-gradient-card border border-border/50">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center">
-                <span className="text-2xl">🌍</span>
-              </div>
-              <h3 className="font-semibold mb-2">Multi Bahasa</h3>
-              <p className="text-sm text-muted-foreground">
-                Mendukung lebih dari 50+ bahasa di dunia
-              </p>
-            </div>
           </div>
         </div>
       </main>
