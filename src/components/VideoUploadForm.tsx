@@ -56,12 +56,12 @@ export default function VideoUploadForm() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+  <div className="bg-card dark:bg-card rounded-2xl shadow-xl border border-border dark:border-border overflow-hidden">
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
           {!showPreview ? (
             <>
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label className="block text-sm font-medium text-card-foreground">
                   Pilih Video
                 </label>
                 <FileUploadZone
@@ -74,14 +74,14 @@ export default function VideoUploadForm() {
               </div>
 
               <div className="space-y-4">
-                <label htmlFor="target-language" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label htmlFor="target-language" className="block text-sm font-medium text-card-foreground">
                   Bahasa Tujuan
                 </label>
                 <select
                   id="target-language"
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="w-full px-4 py-3 sm:py-4 text-sm sm:text-base border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 sm:py-4 text-sm sm:text-base border border-border dark:border-border rounded-xl bg-card text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                 >
                   <option value="">Pilih bahasa terjemahan</option>
                   {LANGUAGES.map((lang) => (
@@ -95,7 +95,7 @@ export default function VideoUploadForm() {
               <button
                 onClick={handleProcess}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 sm:py-4 bg-blue-600 dark:bg-blue-500 text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-all flex items-center justify-center space-x-2 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 sm:py-4 bg-yellow-500 dark:bg-card text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-blue-700 dark:hover:bg-yellow-600 dark:hover:text-gray-900 transition-all flex items-center justify-center space-x-2 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <>
@@ -105,7 +105,9 @@ export default function VideoUploadForm() {
                 ) : (
                   <>
                     <Play className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <span>Proses Video</span>
+                    <span
+                      className="text-gray-900 dark:text-yellow-500"
+                    >Proses Video</span>
                   </>
                 )}
               </button>
@@ -119,7 +121,7 @@ export default function VideoUploadForm() {
           ) : (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                <h2 className="text-xl font-bold text-card-foreground">
                   Preview & Edit Subtitle
                 </h2>
                 <Button

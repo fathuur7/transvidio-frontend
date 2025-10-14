@@ -3,14 +3,14 @@ import VideoUploadForm from "@/components/VideoUploadForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-background transition-colors duration-300">
+  <div className="min-h-screen flex flex-col bg-background transition-colors duration-300 text-foreground">
       <Navbar />
       
       <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-7xl space-y-8">
           {/* Hero Section */}
           <div className="text-center space-y-4 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground">
               Platform Penerjemah Video
               <span className="block mt-2 bg-gradient-primary bg-clip-text text-transparent">
                 Mudah & Cepat

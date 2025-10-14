@@ -36,7 +36,7 @@ export const VideoPlayer = ({ videoRef, videoUrl, currentSubtitle, playerProps }
       <div className="flex items-center justify-between text-white">
         <button
           onClick={playerProps.togglePlayPause}
-          className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition"
+          className="p-2 rounded-full transition hover:shadow-glow"
         >
           {playerProps.isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
         </button>
