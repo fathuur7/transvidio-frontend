@@ -15,4 +15,24 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info']
+      },
+      mangle: true
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['lucide-react', '@radix-ui/react-toast'],
+          'utils': ['@/utils/fileUtils']
+        }
+      }
+    }
+  }
 }));

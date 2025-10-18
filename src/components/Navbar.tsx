@@ -7,26 +7,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import useAuth from "@/hooks/use-auth";
 
 export const Navbar = () => {
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const handleLoginClick = () => {
+    window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname)}`;
+  };
 
   useEffect(() => {
     setMounted(true);
   }, []);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName] = useState("User");
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -48,13 +42,27 @@ export const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              onClick={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
               className="transition-transform hover:scale-110"
             >
               {mounted ? (
                 <>
-                  <Sun className={`h-5 w-5 transition-colors ${resolvedTheme === 'light' ? 'text-ring' : 'text-card-foreground'}`} />
-                  <Moon className={`absolute h-5 w-5 transition-colors ${resolvedTheme === 'dark' ? 'text-ring' : 'text-card-foreground'}`} />
+                  <Sun
+                    className={`h-5 w-5 transition-opacity ${
+                      resolvedTheme === "light"
+                        ? "opacity-100 text-ring"
+                        : "opacity-0"
+                    }`}
+                  />
+                  <Moon
+                    className={`absolute h-5 w-5 transition-opacity ${
+                      resolvedTheme === "dark"
+                        ? "opacity-100 text-ring"
+                        : "opacity-0"
+                    }`}
+                  />
                 </>
               ) : (
                 <Sun className="h-5 w-5 text-card-foreground" />
@@ -63,23 +71,33 @@ export const Navbar = () => {
             </Button>
 
             {/* Auth Section */}
-            {isLoggedIn ? (
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                  >
                     <User className="h-4 w-4" />
-                    <span className="hidden sm:inline">{userName}</span>
+                    <span className="hidden sm:inline">
+                      {user.name || "User"}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
+
                 <DropdownMenuContent align="end" className="w-48 bg-popover">
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="cursor-pointer text-red-500"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={handleLogin} variant="default">
+              <Button onClick={handleLoginClick} variant="default">
+                <User className="h-4 w-4 mr-2" />
                 Login
               </Button>
             )}
