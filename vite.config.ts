@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     host: true, // biar bisa diakses dari luar
     port: 8080,
     allowedHosts: ['srv1068768.hstgr.cloud'] 
-  }
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
