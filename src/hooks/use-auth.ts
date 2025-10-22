@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
 
-/**
- * Custom hook untuk autentikasi JWT + Google OAuth
- * Backend: FastAPI
- * Frontend: React (Vite/CRA)
- */
-
 interface User {
   email: string;
   name: string;
@@ -17,109 +11,103 @@ interface UseAuthReturn {
   user: User | null;
   token: string | null;
   loading: boolean;
+  error: string | null;
   loginWithGoogle: () => void;
   logout: () => Promise<void>;
 }
 
-export default function useAuth(baseUrl = "http://localhost:8000/api"): UseAuthReturn {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+
+export default function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Initialize token from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem("access_token");
+    if (storedToken) {
+      setToken(storedToken);
+    }
+  }, []);
 
   const loginWithGoogle = () => {
-    window.location.href = `${baseUrl}/auth/google`;
+    window.location.href = `${API_BASE_URL}/auth/google`;
+  };
+
+  const clearAuth = () => {
+    localStorage.removeItem("access_token");
+    setUser(null);
+    setToken(null);
   };
 
   const logout = async () => {
     try {
       if (!token) {
-        // console.warn("⚠️ No token to logout");
+        clearAuth();
         return;
       }
 
-      const res = await fetch(`${baseUrl}/auth/logout`, {
+      const res = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
-      const data = await res.json();
 
-      if (data.success) {
-        // console.log("✅ Logout successful");
-        localStorage.removeItem("access_token");
-        setUser(null);
-        setToken(null);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          clearAuth();
+        }
       }
     } catch (err) {
-      // console.error("❌ Logout error:", err);
-      // Tetap clear token meskipun request gagal
-      localStorage.removeItem("access_token");
-      setUser(null);
-      setToken(null);
+      console.error("Logout error:", err);
+      // Clear auth bahkan jika request gagal
+      clearAuth();
     }
   };
 
-  const getCurrentUser = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
+  const getCurrentUser = async (authToken: string) => {
     try {
-      // console.log("🔑 Fetching current user with token:", token.substring(0, 20) + "...");
-      const res = await fetch(`${baseUrl}/auth/me`, {
+      const res = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
       });
 
-      if (res.status === 401) {
-        // console.warn("⚠️ Token invalid or expired");
-        localStorage.removeItem("access_token");
-        setToken(null);
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      if (res.status === 404) {
-        // console.warn("❌ User not found");
-        localStorage.removeItem("access_token");
-        setToken(null);
-        setUser(null);
-        setLoading(false);
+      // Token invalid atau expired
+      if (res.status === 401 || res.status === 404) {
+        clearAuth();
+        setError("Session expired. Please login again.");
         return;
       }
 
       if (!res.ok) {
-        // console.warn("⚠️ Unexpected response:", res.status);
-        localStorage.removeItem("access_token");
-        setToken(null);
-        setUser(null);
-        setLoading(false);
-        return;
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
 
       const data = await res.json();
+      
       if (data.success && data.user) {
-        // console.log("✅ User ditemukan:", data.user);
         setUser(data.user);
+        setError(null);
       } else {
-        // console.warn("❌ Tidak ada data user di response:", data);
-        localStorage.removeItem("access_token");
-        setToken(null);
-        setUser(null);
+        clearAuth();
+        setError("Invalid user data received");
       }
     } catch (err) {
-      console.error("❌ Fetch user error:", err);
-      localStorage.removeItem("access_token");
-      setToken(null);
-      setUser(null);
+      console.error("Fetch user error:", err);
+      clearAuth();
+      setError(err instanceof Error ? err.message : "Failed to fetch user");
     } finally {
       setLoading(false);
     }
   };
+
+  // Handle OAuth callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get("token");
@@ -127,17 +115,20 @@ export default function useAuth(baseUrl = "http://localhost:8000/api"): UseAuthR
     if (tokenFromUrl) {
       localStorage.setItem("access_token", tokenFromUrl);
       setToken(tokenFromUrl);
-      // Hapus ?token=... dari URL
+      
+      // Clean URL tanpa reload
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
+
+  // Fetch user when token changes
   useEffect(() => {
     if (token) {
-      getCurrentUser();
+      getCurrentUser(token);
     } else {
       setLoading(false);
     }
   }, [token]);
 
-  return { user, token, loading, loginWithGoogle, logout };
+  return { user, token, loading, error, loginWithGoogle, logout };
 }
