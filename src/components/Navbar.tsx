@@ -8,11 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
-import useAuth from "@/hooks/use-auth";
+// import useAuth from "@/hooks/use-auth";
 
 export const Navbar = () => {
   const { theme, resolvedTheme, setTheme } = useTheme();
-  const { user, logout } = useAuth();
+  // const { user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const handleLoginClick = () => {
     window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname)}`;
@@ -70,8 +70,7 @@ export const Navbar = () => {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            {/* Auth Section */}
-            {user ? (
+  
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -80,14 +79,14 @@ export const Navbar = () => {
                   >
                     <User className="h-4 w-4" />
                     <span className="hidden sm:inline">
-                      {user.name || "User"}
+                      {/* {user.name || "User"} */}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" className="w-48 bg-popover">
                   <DropdownMenuItem
-                    onClick={logout}
+                    // onClick={logout}
                     className="cursor-pointer text-red-500"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -95,12 +94,12 @@ export const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+       
               <Button onClick={handleLoginClick} variant="default">
                 <User className="h-4 w-4 mr-2" />
                 Login
               </Button>
-            )}
+         
           </div>
         </div>
       </div>
