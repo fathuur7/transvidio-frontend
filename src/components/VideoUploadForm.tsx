@@ -1,5 +1,5 @@
 import React, { useRef, useState, lazy, Suspense } from "react";
-import { Play, X, Lock } from "lucide-react";
+import { Play, X, Lock, ExternalLink, Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { LANGUAGES } from "@/constants/languages";
 import { FileUploadZone } from "@/components/FileUploadZone";
@@ -50,7 +50,7 @@ const SimpleButton = ({ onClick, variant, size, children, className = "" }) => {
 export default function VideoUploadForm() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
-  const { processVideo } = useVideoProcessing(); // PINDAHKAN KE SINI - di top level
+  const { processVideo } = useVideoProcessing();
   const videoRef = useRef(null);
   
   const [selectedLanguage, setSelectedLanguage] = useState("");
@@ -69,6 +69,13 @@ export default function VideoUploadForm() {
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Cloudinary URLs state - TAMBAHAN BARU
+  const [cloudinaryUrls, setCloudinaryUrls] = useState({
+    video: null,
+    srtOriginal: null,
+    srtTranslated: null
+  });
   
   // Video player state
   const [currentTime, setCurrentTime] = useState(0);
@@ -142,7 +149,7 @@ export default function VideoUploadForm() {
     }
   };
 
-  // Handle process - SUDAH TIDAK CALL HOOK DI SINI
+  // Handle process - UPDATED dengan Cloudinary URLs
   const handleProcess = async () => {
     if (!videoFile) {
       toast({
@@ -166,17 +173,24 @@ export default function VideoUploadForm() {
     setError(null);
 
     try {
-      // Langsung gunakan processVideo dari hook yang sudah di-call di top level
       const data = await processVideo(videoFile, selectedLanguage);
       
       if (data && data.translated_srt) {
         const parsed = parseSRT(data.translated_srt);
         setSubtitles(parsed);
+        
+        // Simpan Cloudinary URLs - TAMBAHAN BARU
+        setCloudinaryUrls({
+          video: data.cloudinary_video_url,
+          srtOriginal: data.cloudinary_srt_original_url,
+          srtTranslated: data.cloudinary_srt_translated_url
+        });
+        
         setShowPreview(true);
         
         toast({
           title: "Berhasil",
-          description: "Video berhasil diproses!",
+          description: "Video berhasil diproses dan diupload ke cloud!",
         });
       }
     } catch (err) {
@@ -189,10 +203,6 @@ export default function VideoUploadForm() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleLoginClick = () => {
-    window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname)}`;
   };
 
   const handleDownloadSrt = () => {
@@ -219,6 +229,31 @@ export default function VideoUploadForm() {
         variant: "destructive",
       });
     }
+  };
+
+  // TAMBAHAN: Handler untuk download dari Cloudinary
+  const handleDownloadFromCloudinary = (url, filename) => {
+    if (!url) {
+      toast({
+        title: "Error",
+        description: "URL tidak tersedia",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Berhasil",
+      description: "File berhasil diunduh dari cloud",
+    });
   };
 
   const getCurrentSubtitle = () => {
@@ -314,24 +349,24 @@ export default function VideoUploadForm() {
               </div>
 
               <button
-                  onClick={handleProcess}
-                  disabled={isProcessing || !videoFile || !selectedLanguage}
-                  className="w-full px-4 py-3 sm:py-4 bg-yellow-500 dark:bg-yellow-600 text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-yellow-600 dark:hover:bg-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isProcessing ? (
-                    <>
-                      <span className="animate-spin h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent rounded-full"></span>
-                      <span>Memproses...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-gray-900 dark:text-white">
-                        Proses Video
-                      </span>
-                    </>
-                  )}
-                </button>
+                onClick={handleProcess}
+                disabled={isProcessing || !videoFile || !selectedLanguage}
+                className="w-full px-4 py-3 sm:py-4 bg-yellow-500 dark:bg-yellow-600 text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-yellow-600 dark:hover:bg-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <>
+                    <span className="animate-spin h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span>Memproses...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <span className="text-gray-900 dark:text-white">
+                      Proses Video
+                    </span>
+                  </>
+                )}
+              </button>
 
               {error && (
                 <div className="text-red-600 dark:text-red-400 text-sm sm:text-base p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
@@ -355,6 +390,57 @@ export default function VideoUploadForm() {
                     Kembali
                   </SimpleButton>
                 </div>
+
+                {/* TAMBAHAN BARU: Cloudinary URLs Panel
+                {(cloudinaryUrls.video || cloudinaryUrls.srtOriginal || cloudinaryUrls.srtTranslated) && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3">
+                    <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      File Tersimpan di Cloud
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm">
+                      {cloudinaryUrls.video && (
+                        <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2">
+                          <span className="text-card-foreground">Video Original</span>
+                          <button
+                            onClick={() => handleDownloadFromCloudinary(cloudinaryUrls.video, 'video_original.mp4')}
+                            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </button>
+                        </div>
+                      )}
+                      
+                      {cloudinaryUrls.srtOriginal && (
+                        <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2">
+                          <span className="text-card-foreground">Subtitle Original</span>
+                          <button
+                            onClick={() => handleDownloadFromCloudinary(cloudinaryUrls.srtOriginal, 'subtitle_original.srt')}
+                            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </button>
+                        </div>
+                      )}
+                      
+                      {cloudinaryUrls.srtTranslated && (
+                        <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2">
+                          <span className="text-card-foreground">Subtitle Terjemahan ({selectedLanguage.toUpperCase()})</span>
+                          <button
+                            onClick={() => handleDownloadFromCloudinary(cloudinaryUrls.srtTranslated, `subtitle_${selectedLanguage}.srt`)}
+                            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )} */}
 
                 <LazyVideoPlayer
                   videoRef={videoRef}

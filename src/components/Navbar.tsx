@@ -84,21 +84,9 @@ export const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end" className="w-48 bg-popover">
-                  <DropdownMenuItem
-                    // onClick={logout}
-                    className="cursor-pointer text-red-500"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
+    
               </DropdownMenu>
-       
-              <Button onClick={handleLoginClick} variant="default">
-                <User className="h-4 w-4 mr-2" />
-                Login
-              </Button>
+
          
           </div>
         </div>
