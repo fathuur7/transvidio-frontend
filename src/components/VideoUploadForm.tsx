@@ -1,8 +1,11 @@
-import React, { useRef, useState, lazy, Suspense, useEffect } from "react";
-import { Play, X } from "lucide-react";
+import React, { useRef, useState, lazy, Suspense } from "react";
+import { Play, X, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { LANGUAGES } from "@/constants/languages";
 import { FileUploadZone } from "@/components/FileUploadZone";
+import useAuth from "@/hooks/use-auth";
+import { useVideoProcessing } from "@/hooks/use-vidio";
+import { parseSRT, generateSRT } from "@/utils/fileUtils";
 
 // Lazy load komponen berat
 const VideoPlayer = lazy(() =>
@@ -45,49 +48,67 @@ const SimpleButton = ({ onClick, variant, size, children, className = "" }) => {
 };
 
 export default function VideoUploadForm() {
+  const { user, loading } = useAuth();
   const { toast } = useToast();
+  const { processVideo } = useVideoProcessing(); // PINDAHKAN KE SINI - di top level
   const videoRef = useRef(null);
+  
   const [selectedLanguage, setSelectedLanguage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   
-  // State untuk video upload
+  // Video upload state
   const [videoFile, setVideoFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   
-  // State untuk subtitle
+  // Subtitle state
   const [subtitles, setSubtitles] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editText, setEditText] = useState("");
   
-  // State untuk processing
+  // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   
-  // State untuk video player
+  // Video player state
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
 
-  // Lazy import utils
-  const [fileUtils, setFileUtils] = useState(null);
-  const [videoHooks, setVideoHooks] = useState(null);
-
-  // Load utils saat showPreview true
-  useEffect(() => {
-    if (showPreview && !fileUtils) {
-      import("@/utils/fileUtils").then(module => setFileUtils(module));
+  // Video player handlers
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
     }
-  }, [showPreview, fileUtils]);
+  };
 
-  useEffect(() => {
-    if (showPreview && !videoHooks) {
-      import("@/hooks/use-vidio").then(module => setVideoHooks(module));
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
     }
-  }, [showPreview, videoHooks]);
+  };
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleSeek = (e) => {
+    if (videoRef.current) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      videoRef.current.currentTime = pos * duration;
+    }
+  };
 
   // Handle file change
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (file) => {
     if (file && file.type.startsWith('video/')) {
       setVideoFile(file);
       const url = URL.createObjectURL(file);
@@ -121,7 +142,7 @@ export default function VideoUploadForm() {
     }
   };
 
-  // Handle process - TANPA AUTH CHECK
+  // Handle process - SUDAH TIDAK CALL HOOK DI SINI
   const handleProcess = async () => {
     if (!videoFile) {
       toast({
@@ -145,15 +166,10 @@ export default function VideoUploadForm() {
     setError(null);
 
     try {
-      // Lazy import processVideo function
-      const { useVideoProcessing } = await import("@/hooks/use-vidio");
-      const { processVideo } = useVideoProcessing();
-      
+      // Langsung gunakan processVideo dari hook yang sudah di-call di top level
       const data = await processVideo(videoFile, selectedLanguage);
       
       if (data && data.translated_srt) {
-        // Lazy import parseSRT
-        const { parseSRT } = await import("@/utils/fileUtils");
         const parsed = parseSRT(data.translated_srt);
         setSubtitles(parsed);
         setShowPreview(true);
@@ -175,10 +191,12 @@ export default function VideoUploadForm() {
     }
   };
 
-  const handleDownloadSrt = async () => {
+  const handleLoginClick = () => {
+    window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname)}`;
+  };
+
+  const handleDownloadSrt = () => {
     try {
-      // Dynamic import generateSRT
-      const { generateSRT } = await import("@/utils/fileUtils");
       const srtText = generateSRT(subtitles);
       const blob = new Blob([srtText], { type: 'text/srt' });
       const url = URL.createObjectURL(blob);
@@ -236,17 +254,26 @@ export default function VideoUploadForm() {
     setCurrentTime,
     isPlaying,
     setIsPlaying,
-    togglePlay: () => {
-      if (videoRef.current) {
-        if (isPlaying) {
-          videoRef.current.pause();
-        } else {
-          videoRef.current.play();
-        }
-        setIsPlaying(!isPlaying);
-      }
-    }
+    duration,
+    handleTimeUpdate,
+    handleLoadedMetadata,
+    togglePlayPause,
+    handleSeek
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
+          <div className="p-8 flex items-center justify-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            <span className="ml-3 text-card-foreground">Memuat...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -286,26 +313,25 @@ export default function VideoUploadForm() {
                 </select>
               </div>
 
-              {/* BUTTON TANPA AUTH CHECK */}
               <button
-                onClick={handleProcess}
-                disabled={isProcessing || !videoFile || !selectedLanguage}
-                className="w-full px-4 py-3 sm:py-4 bg-yellow-500 dark:bg-yellow-600 text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-yellow-600 dark:hover:bg-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? (
-                  <>
-                    <span className="animate-spin h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent rounded-full"></span>
-                    <span>Memproses...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <span className="text-gray-900 dark:text-white">
-                      Proses Video
-                    </span>
-                  </>
-                )}
-              </button>
+                  onClick={handleProcess}
+                  disabled={isProcessing || !videoFile || !selectedLanguage}
+                  className="w-full px-4 py-3 sm:py-4 bg-yellow-500 dark:bg-yellow-600 text-white text-sm sm:text-base font-semibold rounded-xl hover:bg-yellow-600 dark:hover:bg-yellow-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing ? (
+                    <>
+                      <span className="animate-spin h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent rounded-full"></span>
+                      <span>Memproses...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-gray-900 dark:text-white">
+                        Proses Video
+                      </span>
+                    </>
+                  )}
+                </button>
 
               {error && (
                 <div className="text-red-600 dark:text-red-400 text-sm sm:text-base p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">

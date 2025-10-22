@@ -173,7 +173,7 @@ const useVideoProcessing = () => {
       formData.append("video_file", videoFile);
       formData.append("target_language", targetLanguage);
 
-      const response = await fetch("http://localhost:8000/translate-video/", {
+      const response = await fetch("http://srv1068768.hstgr.cloud:8000/translate-video/", {
         method: "POST",
         body: formData,
       });
