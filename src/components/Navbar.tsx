@@ -28,10 +28,10 @@ export const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-              <Video className="h-6 w-6 text-primary-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 dark:from-yellow-500 dark:to-yellow-700 shadow-lg shadow-yellow-500/30 dark:shadow-yellow-600/40">
+              <Video className="h-6 w-6 text-gray-900 dark:text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 dark:from-yellow-400 dark:to-yellow-500 bg-clip-text text-transparent">
               TransVidio
             </span>
           </div>
@@ -50,18 +50,16 @@ export const Navbar = () => {
               {mounted ? (
                 <>
                   <Sun
-                    className={`h-5 w-5 transition-opacity ${
-                      resolvedTheme === "light"
+                    className={`h-5 w-5 transition-opacity ${resolvedTheme === "light"
                         ? "opacity-100 text-ring"
                         : "opacity-0"
-                    }`}
+                      }`}
                   />
                   <Moon
-                    className={`absolute h-5 w-5 transition-opacity ${
-                      resolvedTheme === "dark"
+                    className={`absolute h-5 w-5 transition-opacity ${resolvedTheme === "dark"
                         ? "opacity-100 text-ring"
                         : "opacity-0"
-                    }`}
+                      }`}
                   />
                 </>
               ) : (
@@ -70,24 +68,24 @@ export const Navbar = () => {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-  
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex items-center space-x-2"
-                  >
-                    <User className="h-4 w-4" />
-                    <span className="hidden sm:inline">
-                      {/* {user.name || "User"} */}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
 
-    
-              </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {/* {user.name || "User"} */}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
 
-         
+
+            </DropdownMenu>
+
+
           </div>
         </div>
       </div>

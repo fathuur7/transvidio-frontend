@@ -142,11 +142,13 @@ const useVideoProcessing = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState(null);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
   const processVideo = async (videoFile, targetLanguage) => {
     setError("");
     setResults(null);
+    setProgress(0);
 
     if (!targetLanguage) {
       toast({
@@ -169,36 +171,66 @@ const useVideoProcessing = () => {
     setIsProcessing(true);
 
     try {
+      // 1. Upload Video & Start Job
       const formData = new FormData();
       formData.append("video_file", videoFile);
       formData.append("target_language", targetLanguage);
 
-      const response = await fetch("http://srv1068768.hstgr.cloud:8000/translate-video/", {
+      // Use localhost for development
+      const BASE_URL = import.meta.env.VITE_API_URL;
+
+      const response = await fetch(`${BASE_URL}/translate-video/`, {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMsg = errorData.detail || "Gagal memproses video";
-        setError(errorMsg);
-        toast({
-          title: "Error",
-          description: errorMsg,
-          variant: "destructive",
-        });
-        return null;
+        throw new Error(errorData.detail || "Gagal memulai proses video");
       }
 
-      const data = await response.json();
-      setResults(data);
-      
+      const initData = await response.json();
+      const jobId = initData.job_id;
+
       toast({
-        title: "Berhasil",
-        description: "Video berhasil diproses. Silakan preview dan edit subtitle.",
+        title: "Upload Berhasil",
+        description: "Video sedang diproses di background...",
       });
 
-      return data;
+      // 2. Poll Status
+      const pollInterval = 2000; // 2 seconds
+
+      const checkStatus = async () => {
+        const statusResponse = await fetch(`${BASE_URL}/translate-video/status/${jobId}`);
+
+        if (!statusResponse.ok) {
+          throw new Error("Gagal mengecek status job");
+        }
+
+        const statusData = await statusResponse.json();
+
+        // Update progress
+        setProgress(statusData.progress || 0);
+
+        if (statusData.status === "completed") {
+          setResults(statusData.result);
+          setIsProcessing(false);
+          setProgress(100);
+          toast({
+            title: "Selesai!",
+            description: "Video berhasil diproses.",
+          });
+          return statusData.result;
+        } else if (statusData.status === "failed") {
+          throw new Error(statusData.error || "Proses gagal");
+        } else {
+          // Still processing, wait and check again
+          return new Promise(resolve => setTimeout(() => resolve(checkStatus()), pollInterval));
+        }
+      };
+
+      return await checkStatus();
+
     } catch (err) {
       const errorMsg = err.message || "Terjadi kesalahan saat memproses video";
       setError(errorMsg);
@@ -207,13 +239,13 @@ const useVideoProcessing = () => {
         description: errorMsg,
         variant: "destructive",
       });
-      return null;
-    } finally {
       setIsProcessing(false);
+      setProgress(0);
+      return null;
     }
   };
 
-  return { isProcessing, error, results, processVideo };
+  return { isProcessing, error, results, progress, processVideo };
 };
 
 export { useVideoUpload, useSubtitleEditor, useVideoPlayer, useVideoProcessing };
