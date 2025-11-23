@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  nginx-lb:
+    build: ./translate-backend
+    container_name: transvidio-backend
+    ports:
+      - "8000:80"
+    volumes:
+      - ./translate-backend/uploads:/app/uploads
+      - ./translate-backend/app/static:/app/app/static
+    environment:
+      - WHISPER_MODEL=base
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./transvidio-frontend
+      args:
+        - VITE_API_BASE_URL=https://server.nadasaku.biz.id
+    container_name: transvidio-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - nginx-lb
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    container_name: transvidio-tunnel
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiYjYyZmU5ODBmMjMwZjdlY2QwZjg3NWExOGJlMTE2NmQiLCJ0IjoiNzNkZmVlZTgtMDc3Ny00OWM3LTlkNTUtMGI2ODAwZjM4YjcwIiwicyI6Ik5HVXdNbUU1TURndFpqY3dNUzAwTWpGakxXSmhORGN0TnpVelpXVTJNbUV6TlRSayJ9
+    depends_on:
+      - frontend
+      - nginx-lb
