@@ -3,10 +3,11 @@ import { UploadPanel } from "@/components/UploadPanel";
 import { VideoReviewPanel } from "@/components/VideoReviewPanel";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { SubtitleStyle } from "@/components/SubtitleStylePanel";
-import { useVideoProcessing } from "@/hooks/use-vidio";
+
 import { useToast } from "@/components/ui/use-toast";
 import { parseSRT, generateSRT } from "@/utils/fileUtils";
 import { useState, useRef } from "react";
+import { useVideoProcessing } from "@/hooks/use-vidio";
 
 const Index = () => {
   const { processVideo, progress } = useVideoProcessing();

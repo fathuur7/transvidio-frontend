@@ -33,13 +33,13 @@ const LoadingSpinner = () => (
 // Simple Button component
 const SimpleButton = ({ onClick, variant, size, children, className = "" }) => {
   const baseClass = "px-4 py-2 rounded-lg font-medium transition-all";
-  const variantClass = variant === "outline" 
-    ? "border border-border bg-transparent hover:bg-accent" 
+  const variantClass = variant === "outline"
+    ? "border border-border bg-transparent hover:bg-accent"
     : "bg-primary text-primary-foreground hover:bg-primary/90";
-  
+
   return (
-    <button 
-      onClick={onClick} 
+    <button
+      onClick={onClick}
       className={`${baseClass} ${variantClass} ${className}`}
     >
       {children}
@@ -52,31 +52,31 @@ export default function VideoUploadForm() {
   const { toast } = useToast();
   const { processVideo } = useVideoProcessing();
   const videoRef = useRef(null);
-  
+
   const [selectedLanguage, setSelectedLanguage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  
+
   // Video upload state
   const [videoFile, setVideoFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
-  
+
   // Subtitle state
   const [subtitles, setSubtitles] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editText, setEditText] = useState("");
-  
+
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Cloudinary URLs state - TAMBAHAN BARU
   const [cloudinaryUrls, setCloudinaryUrls] = useState({
     video: null,
     srtOriginal: null,
     srtTranslated: null
   });
-  
+
   // Video player state
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -139,7 +139,7 @@ export default function VideoUploadForm() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('video/')) {
       setVideoFile(file);
@@ -174,20 +174,20 @@ export default function VideoUploadForm() {
 
     try {
       const data = await processVideo(videoFile, selectedLanguage);
-      
+
       if (data && data.translated_srt) {
         const parsed = parseSRT(data.translated_srt);
         setSubtitles(parsed);
-        
+
         // Simpan Cloudinary URLs - TAMBAHAN BARU
         setCloudinaryUrls({
           video: data.cloudinary_video_url,
           srtOriginal: data.cloudinary_srt_original_url,
           srtTranslated: data.cloudinary_srt_translated_url
         });
-        
+
         setShowPreview(true);
-        
+
         toast({
           title: "Berhasil",
           description: "Video berhasil diproses dan diupload ke cloud!",
@@ -217,7 +217,7 @@ export default function VideoUploadForm() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Berhasil",
         description: "File SRT berhasil diunduh",
@@ -241,7 +241,7 @@ export default function VideoUploadForm() {
       });
       return;
     }
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
@@ -249,7 +249,7 @@ export default function VideoUploadForm() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    
+
     toast({
       title: "Berhasil",
       description: "File berhasil diunduh dari cloud",

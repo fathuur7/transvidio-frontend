@@ -1,4 +1,4 @@
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 import { formatTime } from "@/utils/fileUtils";
 import { SubtitleStyle } from "@/components/SubtitleStylePanel";
 
@@ -107,14 +107,33 @@ export const VideoReviewPanel = ({
 
                     {/* Controls */}
                     <div className="flex items-center justify-between text-white">
-                        <button
-                            onClick={onTogglePlay}
-                            className="p-2 rounded-full transition hover:bg-white/20"
-                        >
-                            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={onTogglePlay}
+                                className="p-2 rounded-full transition hover:bg-white/20"
+                            >
+                                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+                            </button>
 
-                        <span className="text-sm">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => onSeek(Math.max(0, currentTime - 5))}
+                                    className="p-2 rounded-full transition hover:bg-white/20 text-white/90 hover:text-white"
+                                    title="Rewind 5s"
+                                >
+                                    <RotateCcw className="h-5 w-5" />
+                                </button>
+                                <button
+                                    onClick={() => onSeek(Math.min(duration, currentTime + 5))}
+                                    className="p-2 rounded-full transition hover:bg-white/20 text-white/90 hover:text-white"
+                                    title="Forward 5s"
+                                >
+                                    <RotateCw className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <span className="text-sm font-mono">
                             {formatTime(currentTime)} / {formatTime(duration)}
                         </span>
                     </div>
